@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gearsentry"
+version = "0.1.0"
+description = "Rastreador inteligente de preços de perifericos com alerta no DISCORD e análise de histórico."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "pydantic>=2.7.0",
+    "sqlalchemy>=2.0.0",
+    "loguru>=0.7.0",
+    "typer>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.12.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
