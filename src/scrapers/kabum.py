@@ -1,3 +1,4 @@
+import re
 from bs4 import BeautifulSoup
 from decimal import Decimal
 from loguru import logger
@@ -14,17 +15,23 @@ class KabumScraper(BaseScraper):
         R$ 1.999,99 -> 1999.99
         """
         try:
-            clean_str = (
-                price_str.replace("R$", "")
-                .replace(".", "")
-                .replace(",", "")
-                .strip()
-            )
+            # Remove tudo exceto números, pontos e vírgulas
+            clean_str = re.sub(r"[^\d.,]", "", price_str).strip()
+
+            # Se tiver ponto e vírgula (ex: 1.299,90)
+            if "." in clean_str and "," in clean_str:
+                # Remove o ponto de milhar e substitui a vírgula decimal por ponto
+                clean_str = clean_str.replace(".", "").replace(",", ".")
+            elif "," in clean_str:
+                # Se tiver apenas vírgula (ex: 199,90), substitui por ponto
+                clean_str = clean_str.replace(",", ".")
+
             return Decimal(clean_str)
         except Exception as e:
             logger.error(
                 f"Erro ao converter string de preço '{price_str}': {e}")
-            raise ValueError(f"Preço inválido: {price_str} ")
+            raise ValueError(
+                f"Preço inválido encontrado no scraping: {price_str}")
 
     def parse_product(self, html: str, url: str) -> ProductBase:
         """
