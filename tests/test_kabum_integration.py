@@ -1,4 +1,5 @@
 import pytest
+
 from src.scrapers.kabum import KabumScraper
 
 # URL de um produto estável na Kabum para teste de integração

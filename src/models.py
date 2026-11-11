@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Optional
+
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
@@ -13,7 +13,7 @@ class ProductBase(BaseModel):
     url: HttpUrl = Field(...,
                          description="Link direto para a página do produto")
     current_price: Decimal = Field(..., gt=0, description="Preço atual")
-    original_price: Optional[Decimal] = Field(
+    original_price: Decimal | None = Field(
         default=None, gt=0, description="Preço sem desconto (se houver)")
     in_stock: bool = Field(
         default=True, description="Disponibilidade de estoque")

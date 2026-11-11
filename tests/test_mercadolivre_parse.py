@@ -9,7 +9,10 @@ from src.scrapers.mercadolivre import MercadoLivreScraper
 URL = "https://www.mercadolivre.com.br/produto/exemplo"
 
 
-def make_html(title: str | None = "Smartphone Xiaomi Redmi Note 13", price: str | None = "1299") -> str:
+def make_html(
+    title: str | None = "Smartphone Xiaomi Redmi Note 13",
+    price: str | None = "1299",
+) -> str:
     h1 = f'<h1 class="ui-pdp-title">{title}</h1>' if title else ""
     val = f'<span class="andes-money-amount__fraction">{price}</span>' if price else ""
     return f"<html><body>{h1}{val}</body></html>"

@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from src.scrapers.exceptions import ParseError, ProductUnavailable
@@ -7,7 +8,10 @@ from src.scrapers.pichau import PichauScraper
 URL = "https://www.pichau.com.br/produto/exemplo"
 
 
-def make_html(title: str | None = "Placa de Vídeo RTX 4060", price: str | None = "R$ 1.899,99") -> str:
+def make_html(
+    title: str | None = "Placa de Vídeo RTX 4060",
+    price: str | None = "R$ 1.899,99",
+) -> str:
     h1 = f'<h1 class="font-bold">{title}</h1>' if title else ""
     val = f'<span class="text-price">{price}</span>' if price else ""
     return f"<html><body>{h1}{val}</body></html>"

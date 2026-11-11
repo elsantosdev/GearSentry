@@ -1,4 +1,5 @@
 import pytest
+
 from src.scrapers.terabyte import TerabyteScraper
 
 # Cole a URL real de um produto que esteja em estoque no momento

@@ -1,11 +1,13 @@
-import pytest
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
+
 from src.models import ProductBase
 
 
 def test_valid_product_creation():
-    # Assegura que uma instância de produto válida seja criada e que os campos sejam devidamente zerados.
+    # Produto válido é criado, com título e loja sem espaços nas pontas.
     product = ProductBase(
         title="  Teclado Mecânico Redragon Kumara  ",
         store=" Kabum ",
@@ -33,7 +35,7 @@ def test_invalid_price_raises_validation_error():
 
 
 def test_discount_calculation_without_original_price():
-    # Certifica-se de que valores de preço abaixo ou iguais a zero gerem um aviso de validação rigoroso.
+    # Sem preço original, o percentual de desconto é 0.
     product = ProductBase(
         title="Headset HyperX Cloud II",
         store="Pichau",

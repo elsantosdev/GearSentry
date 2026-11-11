@@ -58,7 +58,7 @@ class BaseScraper(ABC):
 
     async def _download(self, url: str) -> str:
         try:
-            async with AsyncSession(impersonate=self.impersonate) as session:  # type: ignore[arg-type]
+            async with AsyncSession(impersonate=self.impersonate) as session:
                 response = await session.get(url, timeout=self.timeout)
         except RequestException as exc:
             raise StoreRequestError(f"Falha ao acessar {url}: {exc}") from exc
@@ -71,7 +71,7 @@ class BaseScraper(ABC):
         if status != 200:
             raise StoreRequestError(f"HTTP {status} em {url}")
 
-        return response.text
+        return str(response.text)
 
     # ---------- Parsing ----------
 

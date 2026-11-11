@@ -87,7 +87,8 @@ class TestFirstText:
         assert first_text(soup, (".a", ".b")) == "R$ 10,00"
 
     def test_require_digit_ignora_texto_sem_numero(self):
-        soup = BeautifulSoup('<p class="a">Indisponível</p><p class="b">R$ 10,00</p>', "html.parser")
+        html = '<p class="a">Indisponível</p><p class="b">R$ 10,00</p>'
+        soup = BeautifulSoup(html, "html.parser")
         assert first_text(soup, (".a", ".b"), require_digit=True) == "R$ 10,00"
         assert first_text(soup, (".a", ".b")) == "Indisponível"
 

@@ -1,4 +1,5 @@
 import asyncio
+
 from curl_cffi.requests import AsyncSession
 
 URL = "https://www.mercadolivre.com.br/ssd-samsung-pm9c1a-1tb-m2-2280-nvme-pcie-gen4-x4-gaming-preto/p/MLB66191177"

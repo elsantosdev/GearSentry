@@ -1,4 +1,5 @@
 import pytest
+
 from src.scrapers.pichau import PichauScraper
 
 # URL teste

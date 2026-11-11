@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from src.scrapers.exceptions import ParseError, ProductUnavailable
@@ -7,7 +8,10 @@ from src.scrapers.kabum import KabumScraper
 URL = "https://www.kabum.com.br/produto/1/exemplo"
 
 
-def make_html(title: str | None = "Processador AMD Ryzen 5 5600", price: str | None = "R$ 899,99") -> str:
+def make_html(
+    title: str | None = "Processador AMD Ryzen 5 5600",
+    price: str | None = "R$ 899,99",
+) -> str:
     h1 = f'<h1 class="boxTitle">{title}</h1>' if title else ""
     val = f'<h4 class="sc-5c3b3135-2">{price}</h4>' if price else ""
     return f"<html><body>{h1}{val}</body></html>"

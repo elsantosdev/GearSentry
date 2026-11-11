@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from src.scrapers.exceptions import ParseError, ProductUnavailable
@@ -7,7 +8,10 @@ from src.scrapers.terabyte import TerabyteScraper
 URL = "https://www.terabyteshop.com.br/produto/20782/processador-amd-ryzen-5-5500-36ghz-42ghz-turbo-6-cores-12-threads-cooler-wraith-stealth-am4-100-100000457box"
 
 
-def make_html(title: str | None = "Placa de Vídeo RTX 4060", price: str | None = "R$ 1.999,99") -> str:
+def make_html(
+    title: str | None = "Placa de Vídeo RTX 4060",
+    price: str | None = "R$ 1.999,99",
+) -> str:
     h1 = f'<h1 class="tit-prod">{title}</h1>' if title else ""
     val = f'<div id="valVista">{price}</div>' if price else ""
     return f"<html><body>{h1}{val}</body></html>"
