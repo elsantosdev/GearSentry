@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel, Field, HttpUrl, field_validator
@@ -41,4 +41,4 @@ class PriceSnapshot(BaseModel):
     # Armazenamento provisório de custos para compilar o histórico no banco de dados.
     product_url: HttpUrl
     price: Decimal = Field(..., gt=0)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
