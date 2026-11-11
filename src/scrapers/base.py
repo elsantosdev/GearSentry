@@ -1,68 +1,104 @@
-import httpx
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional
+from decimal import Decimal
+from typing import ClassVar
+
+from bs4 import BeautifulSoup, Tag
+from curl_cffi.requests import AsyncSession
+from curl_cffi.requests.exceptions import RequestException
 from loguru import logger
-from src.models import ProductBase
+
+from src.schemas.product import ProductCreate
+from src.scrapers.exceptions import (
+    BlockedByStore,
+    ParseError,
+    ProductNotFound,
+    ProductUnavailable,
+    StoreRequestError,
+)
+from src.scrapers.utils import RawPrice, attr_text, first_text, parse_price
 
 
 class BaseScraper(ABC):
-    """
-    Classe Abstrata Base (Interface) para todos os scrapers de e-commerce do GearSentry.
-    Assegura que qualquer scraper específico implemente os métodos essenciais de extração.
+    """Base de todos os scrapers de loja.
+
+    Concentra o que é comum (download com impersonação de navegador, tradução de
+    status HTTP em exceções, título e validação do preço). Cada loja informa seus
+    seletores e implementa apenas ``_find_raw_price``.
     """
 
-    def __init__(self, timeout: float = 10.0):
+    store_name: ClassVar[str]
+    base_url: ClassVar[str]
+    title_selectors: ClassVar[tuple[str, ...]] = ("h1",)
+    impersonate: ClassVar[str] = "chrome"
+
+    def __init__(self, timeout: float = 15.0) -> None:
         self.timeout = timeout
-        self.headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        }
 
-    async def fetch_html(self, url: str) -> Optional[str]:
-        """
-        Faz uma chamada HTTP assíncrona para capturar o conteúdo HTML puro da página do item.
-        Lida com falhas de rede frequentes de maneira robusta.
-        """
-        logger.info(f"Carregar HTML do URL: {url}")
+    # ---------- API pública ----------
+
+    async def fetch_product(self, url: str) -> ProductCreate:
+        html = await self._download(url)
+        return self.parse(html, url)
+
+    def parse(self, html: str, url: str) -> ProductCreate:
+        """Extrai os dados do HTML, sem dependência de rede."""
+        soup = BeautifulSoup(html, "html.parser")
+        title = self._extract_title(soup)
+        price = self._extract_price(soup, title)
+        return ProductCreate(
+            title=title,
+            current_price=price,
+            url=url,
+            store=self.store_name,
+        )
+
+    # ---------- Rede ----------
+
+    async def _download(self, url: str) -> str:
         try:
-            async with httpx.AsyncClient(headers=self.headers, follow_redirects=True, timeout=self.timeout) as client:
-                response = await client.get(url)
+            async with AsyncSession(impersonate=self.impersonate) as session:  # type: ignore[arg-type]
+                response = await session.get(url, timeout=self.timeout)
+        except RequestException as exc:
+            raise StoreRequestError(f"Falha ao acessar {url}: {exc}") from exc
 
-                # Se o site retornar erro (por exemplo: 404 Not Found, 503 Service Unavailable)
-                if response.status_code != 200:
-                    logger.error(
-                        f"Erro HTTP {response.status_code} ao aceder a {url}")
-                    return None
+        status = response.status_code
+        if status == 404:
+            raise ProductNotFound(url)
+        if status in (403, 429):
+            raise BlockedByStore(f"HTTP {status} em {url}")
+        if status != 200:
+            raise StoreRequestError(f"HTTP {status} em {url}")
 
-                return response.text
-        except httpx.RequestError as e:
-            logger.error(f"Erro de conexão ao acessar {url}: {e}")
-            return None
+        return response.text
+
+    # ---------- Parsing ----------
 
     @abstractmethod
-    def parse_product(self, html: str, url: str) -> ProductBase:
-        """
-        Método abstrato obrigatório. Cada scraper de loja específica deve implementar a lógica de 
-        BeautifulSoup para extrair os dados e retornar um ProductBase validado.
-        """
-        pass
+    def _find_raw_price(self, soup: BeautifulSoup) -> RawPrice | None:
+        """Devolve o preço bruto da página (texto ou número), ou ``None`` se não achar."""
 
-    async def scrape(self, url: str) -> Optional[ProductBase]:
-        # (Template Method): Orquestra o fluxo completo de busca e parsing.
-        html = await self.fetch_html(url)
-        if not html:
-            return None
+    def _extract_title(self, soup: BeautifulSoup) -> str:
+        title = first_text(soup, self.title_selectors)
+        if title:
+            return title
 
-        try:
-            product = self.parse_product(html, url)
-            logger.success(
-                f"Produto localizado com sucesso: {product.title} [{product.current_price}]")
-            return product
-        except Exception as e:
-            logger.exception(
-                f"Erro ao processar o parsing do HTML para a URL {url}: {e}")
-            return None
+        meta_title = soup.find("meta", property="og:title")
+        if isinstance(meta_title, Tag):
+            title = attr_text(meta_title, "content")
+            if title:
+                return title
+
+        raise ParseError(f"Título não encontrado em {self.store_name}.")
+
+    def _extract_price(self, soup: BeautifulSoup, title: str) -> Decimal:
+        raw_price = self._find_raw_price(soup)
+        if raw_price is None:
+            raise ParseError(f"Preço não encontrado. Título extraído: '{title}'")
+
+        price = parse_price(raw_price)
+        if price <= 0:
+            logger.warning(f"Produto indisponível ou sem preço válido: {title}")
+            raise ProductUnavailable(title)
+        return price

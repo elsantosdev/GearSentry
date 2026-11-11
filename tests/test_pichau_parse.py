@@ -40,3 +40,15 @@ def test_parse_sem_preco(scraper):
 def test_parse_preco_zerado(scraper):
     with pytest.raises(ProductUnavailable):
         scraper.parse(make_html(price="R$ 0,00"), URL)
+
+
+# ---------- Regressões ----------
+
+
+def test_preco_decimal_do_next_data_nao_vira_10x(scraper):
+    html = (
+        '<h1 class="font-bold">Mouse Gamer 7000 DPI</h1>'
+        '<script id="__NEXT_DATA__" type="application/json">'
+        '{"props": {"product": {"specialPrice": 199.9}}}</script>'
+    )
+    assert scraper.parse(html, URL).current_price == Decimal("199.9")

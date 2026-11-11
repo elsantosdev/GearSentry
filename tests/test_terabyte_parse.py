@@ -50,16 +50,3 @@ def test_parse_preco_sem_numero(scraper):
 def test_parse_preco_zerado(scraper):
     with pytest.raises(ProductUnavailable):
         scraper.parse(make_html(price="R$ 0,00"), URL)
-
-
-@pytest.mark.parametrize(
-    "raw, esperado",
-    [
-        ("R$ 1.999,99", Decimal("1999.99")),
-        ("R$ 999,90", Decimal("999.90")),
-        ("À vista R$ 12.345,00 no pix", Decimal("12345.00")),
-        ("R$ 0,00", Decimal("0.00")),
-    ],
-)
-def test_parse_price(raw, esperado):
-    assert TerabyteScraper._parse_price(raw) == esperado
