@@ -1,43 +1,35 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "gearsentry"
 version = "0.1.0"
-description = "Rastreador inteligente de preços de perifericos com alerta no DISCORD e análise de histórico."
+description = "Monitoramento de preços de periféricos com histórico e alertas"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "curl_cffi>=0.7.0",
-    "beautifulsoup4>=4.12.0",
-    "pydantic>=2.7.0",
-    "sqlalchemy>=2.0.0",
-    "loguru>=0.7.0",
-    "typer>=0.12.0",
+    "curl_cffi>=0.7",
+    "beautifulsoup4>=4.12",
+    "pydantic>=2.5",
+    "sqlalchemy>=2.0",
+    "typer>=0.12",
+    "loguru>=0.7",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=5.0.0",
-    "anyio>=4.0.0",
-    "ruff>=0.6.0",
-    "mypy>=1.10.0",
-]
+dev = ["pytest>=8", "ruff>=0.5"]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+[project.scripts]
+gearsentry = "gearsentry.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gearsentry"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
 testpaths = ["tests"]
-# Por padrão roda só os testes offline; para os de integração: pytest -m integration
+markers = ["integration: faz requisições reais (rede)"]
 addopts = "-m 'not integration'"
-markers = [
-    "integration: testes que acessam o site real",
-]
 
 [tool.ruff]
 line-length = 100
@@ -45,8 +37,3 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-
-[tool.mypy]
-python_version = "3.10"
-strict = true
-files = ["src"]
