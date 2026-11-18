@@ -10,6 +10,7 @@ from gearsentry.db.session import get_engine, session_scope
 from gearsentry.schemas.product import ScrapedProduct
 from gearsentry.scrapers.base import ScraperError
 from gearsentry.scrapers.registry import get_scraper
+from gearsentry.scrapers.urls import normalize_url
 from gearsentry.services.tracker import PriceChange, record_price
 
 app = typer.Typer(help="GearSentry: monitor de preços de periféricos.", no_args_is_help=True)
@@ -68,7 +69,7 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
 @app.command()
 def track(url: str) -> None:
     """Começa a monitorar um produto (raspa agora e registra o preço inicial)."""
-    if _run([url]):
+    if _run([normalize_url(url)]):
         raise typer.Exit(code=1)
 
 
